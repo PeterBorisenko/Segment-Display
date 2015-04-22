@@ -1,65 +1,96 @@
 #include "SegmentDisplay.h"
 
 void displaySetup() {
-    shiftRegSetup();
+#if (DIGITS_NUMBER > 1)
+    digit_index= 0;
+#endif
 #if (DISPLAY_METHOD != STATIC)
+    shiftRegSetup();
 #if (DIGITS_NUMBER == 2)
-    SEG_DIR|= (1 << SEG_0)|(1 << SEG_1);
+    SEG_ANSEL&= ~(S0_AN|S1_AN);
+    SEG_DIR|= SEG_0|SEG_1;
 #elif (DIGITS_NUMBER == 3)
-    SEG_DIR|= (1 << SEG_0)|(1 << SEG_1)|(1 << SEG_2);
+    SEG_ANSEL&= ~(S0_AN|S1_AN|S2_AN);
+    SEG_DIR|= SEG_0|SEG_1|SEG_2;
 #elif (DIGITS_NUMBER == 4)
-    SEG_DIR|= (1 << SEG_0)|(1 << SEG_1)|(1 << SEG_2)|(1 << SEG_3);
+    SEG_ANSEL&= ~(S0_AN|S1_AN|S2_AN|S3_AN);
+    SEG_DIR&= ~(SEG_0|SEG_1|SEG_2|SEG_3);
 #endif
 #endif
 //    for (int8_t i= 15; i >= 0; i--) {
 //        numbers[i]= eeprom_read(i+ADDR_SHIFT);
 //    }
 }
-
+/*
 void displayPrint(uint8_t num) {
+#ifdef USE_EEPROM
+
+#else
     shiftOut(numbers[num%10]);
-    // TODO: Check delay
+#endif
 #if (DIGITS_NUMBER > 1)
     uint8_t a;
-    SEG_0= 1;
+    //SEG_0= 1;
+    SEG_PORT|= seg[0];
     for (uint8_t i = 20; i > 0; i--) {
         asm("nop\n");
     }
             if(num/=10) {
                 a= num%10;
-                SEG_0= 0;
+                //SEG_0= 0;
+                SEG_PORT&= ~seg[0];
+#ifdef USE_EEPROM
+
+#else
                 shiftOut(numbers[a]);
-                SEG_1= 1;
+#endif
+                //SEG_1= 1;
+                SEG_PORT|= seg[1];
                 for (uint8_t i = 20; i > 0; i--) {
                     asm("nop\n");
                 }
 #if (DIGITS_NUMBER == 2)
-        SEG_1 = 0;
+        //SEG_1 = 0;
+                SEG_PORT&= ~seg[1];
 #endif
 #endif
 #if (DIGITS_NUMBER > 2)
             if(num/=10) {
                 a= num%10;
-                SEG_1= 0;
+                //SEG_1= 0;
+                SEG_PORT&= ~seg[1];
+#ifdef USE_EEPROM
+
+#else
                 shiftOut(numbers[a]);
-                SEG_2= 1;
+#endif
+                //SEG_2= 1;
+                SEG_PORT|= seg[2];
                 for (uint8_t i = 20; i > 0; i--) {
                     asm("nop\n");
                 }
 #if (DIGITS_NUMBER == 3)
-                SEG_2 = 0;
+                //SEG_2 = 0;
+                SEG_PORT&= ~seg[2];
 #endif
 #endif
 #if (DIGITS_NUMBER > 3)
             if(num/=10) {
                 a= num%10;
-                SEG_2= 0;
+                //SEG_2= 0;
+                SEG_PORT&= ~seg[2];
+#ifdef USE_EEPROM
+
+#else
                 shiftOut(numbers[a]);
-                SEG_3= 1;
+#endif
+                //SEG_3= 1;
+                SEG_PORT|= seg[3];
                 for (uint8_t i = 20; i > 0; i--) {
                     asm("nop\n");
                 }
-                SEG_3= 0;
+                //SEG_3= 0;
+                SEG_PORT&= ~seg[3];
             }
             else {
                 return;
@@ -82,19 +113,28 @@ void displayPrint(uint8_t num) {
     }
     
 }
-
-void displayPrintESR(uint8_t num) {
+*/
+void displayPrintESR(uint16_t num) {
     if (digit_index == 0) {
         calc_var= num;
     }
     if (digit_index < DIGITS_NUMBER) {
         uint8_t a= calc_var%10;
-        uint8_t b= eeprom_read(a+ADDR_SHIFT);
-        seg[digit_index]= 0;
-        //shiftOut(numbers[a]);
+#ifdef USE_EEPROM
+        uint8_t b= eeprom_read(a);
+        //seg[digit_index]= 0;
+        SEG_PORT&= ~seg[prev_digit_index];
         shiftOut(b);
-        seg[digit_index]= 1;
-        if (calc_var/10) {
+#else
+        //seg[digit_index]= 0;
+        SEG_PORT&= ~seg[prev_digit_index];
+        shiftOut(numbers[a]);
+#endif
+        //seg[digit_index]= 1;
+        SEG_PORT|= seg[digit_index];
+        calc_var/= 10;
+        prev_digit_index= digit_index;
+        if (calc_var) {
             digit_index++;
         }
         else {
@@ -102,37 +142,56 @@ void displayPrintESR(uint8_t num) {
         }
     }
 }
-
+/*
 void displayPrintBCD(uint8_t num) {
     //BCDword(BCDbuf, num);
 #if (DIGITS_NUMBER == 4)
-    shiftOut(numbers[BCDbuf[3]]);
+#ifdef USE_EEPROM
+
+#else
+                shiftOut(numbers[BCDbuf[3]]);
+#endif
+    
     //SEG_3= 1;
     for (uint8_t i = 20; i > 0; i--) {
         asm("nop\n");
     }
     //SEG_3= 0;
 #elif (DIGITS_NUMBER == 3)
-    shiftOut(numbers[BCDbuf[2]]);
+#ifdef USE_EEPROM
+
+#else
+                shiftOut(numbers[BCDbuf[2]]);
+#endif
     //SEG_2= 1;
     for (uint8_t i = 20; i > 0; i--) {
         asm("nop\n");
     }
     //SEG_2= 0;
 #elif (DIGITS_NUMBER == 2)
-    shiftOut(numbers[BCDbuf[1]]);
+#ifdef USE_EEPROM
+
+#else
+                shiftOut(numbers[BCDbuf[1]]);
+#endif
     //SEG_1= 1;
     for (uint8_t i = 20; i > 0; i--) {
         asm("nop\n");
     }
     //SEG_1= 0;
+#elif (DIGITS_NUMBER == 1)
+
+#ifdef USE_EEPROM
+
+#else
+                shiftOut(numbers[BCDbuf[0]]);
 #endif
-    shiftOut(numbers[BCDbuf[0]]);
     //SEG_0= 1;
     for (uint8_t i = 20; i > 0; i--) {
         asm("nop\n");
     }
     //SEG_0= 0;
+#endif
 }
 
 void displayIdle();
@@ -155,3 +214,4 @@ void displayWait(uint8_t dir) {
         }
     } 
 }
+ */
