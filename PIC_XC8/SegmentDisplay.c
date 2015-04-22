@@ -8,13 +8,16 @@ void displaySetup() {
     shiftRegSetup();
 #if (DIGITS_NUMBER == 2)
     SEG_ANSEL&= ~(S0_AN|S1_AN);
-    SEG_DIR|= SEG_0|SEG_1;
+    SEG_DIR&= ~(SEG_0|SEG_1);
+    SEG_PORT&= ~(SEG_0|SEG_1);
 #elif (DIGITS_NUMBER == 3)
     SEG_ANSEL&= ~(S0_AN|S1_AN|S2_AN);
-    SEG_DIR|= SEG_0|SEG_1|SEG_2;
+    SEG_DIR&= ~(SEG_0|SEG_1|SEG_2);
+    SEG_PORT&= ~(SEG_0|SEG_1|SEG_2);
 #elif (DIGITS_NUMBER == 4)
     SEG_ANSEL&= ~(S0_AN|S1_AN|S2_AN|S3_AN);
     SEG_DIR&= ~(SEG_0|SEG_1|SEG_2|SEG_3);
+    SEG_PORT&= ~(SEG_0|SEG_1|SEG_2|SEG_3);
 #endif
 #endif
 //    for (int8_t i= 15; i >= 0; i--) {
@@ -114,31 +117,62 @@ void displayPrint(uint8_t num) {
     
 }
 */
-void displayPrintESR(uint16_t num) {
+void displayPrintESR(int16_t num) {
     if (digit_index == 0) {
-        calc_var= num;
+        segm_flag= DIGIT;
+        if (num < 0) {
+            calc_var= (uint16_t)(0 - num);
+            negative= 1;
+        }
+        else {
+            calc_var= num;
+            negative= 0;
+        }
     }
     if (digit_index < DIGITS_NUMBER) {
-        uint8_t a= calc_var%10;
+        if (segm_flag&DIGIT) {
+            uint8_t a= calc_var%10;
 #ifdef USE_EEPROM
-        uint8_t b= eeprom_read(a);
-        //seg[digit_index]= 0;
-        SEG_PORT&= ~seg[prev_digit_index];
-        shiftOut(b);
+            uint8_t b= eeprom_read(a);
+            //seg[digit_index]= 0;
+            SEG_PORT&= ~seg[prev_digit_index];
+            shiftOut(b);
 #else
         //seg[digit_index]= 0;
         SEG_PORT&= ~seg[prev_digit_index];
         shiftOut(numbers[a]);
 #endif
-        //seg[digit_index]= 1;
-        SEG_PORT|= seg[digit_index];
-        calc_var/= 10;
-        prev_digit_index= digit_index;
-        if (calc_var) {
-            digit_index++;
+        }
+        else if (segm_flag&MINUS) {
+            SEG_PORT &= ~seg[prev_digit_index];
+            shiftOut(_minus);
         }
         else {
+            SEG_PORT&= ~seg[prev_digit_index];
+            shiftOut(0x00);
+        }
+        //seg[digit_index]= 1;
+        SEG_PORT |= seg[digit_index];
+        prev_digit_index= digit_index;
+        digit_index++;
+        if (digit_index == DIGITS_NUMBER) {
             digit_index= 0;
+        }
+        if (segm_flag&DIGIT) {
+            calc_var/= 10;
+            if (!calc_var) {
+                if (negative) {
+                    segm_flag= MINUS;
+                }
+                else {
+                    segm_flag= SPACE;
+                }
+            }
+        }
+        else if (segm_flag&MINUS){
+            if (prev_digit_index != (DIGITS_NUMBER - 1)){
+                segm_flag= SPACE;
+            }
         }
     }
 }
