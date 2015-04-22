@@ -126,7 +126,7 @@ uint8_t numbers[]= {_0, _1, _2, _3, _4, _5, _6, _7, _8, _9};
 #define minus 0b01000000
 #elif (BIT_ORDER == LSB)
 #define _dot 0b10000000
-#define minus 0b00000010
+#define _minus 0b00000010
 #endif
 #else
 #define _dot 0b00000001
@@ -169,8 +169,15 @@ uint8_t numbers[]= {_0, _1, _2, _3, _4, _5, _6, _7, _8, _9};
 
 #if (DIGITS_NUMBER > 1)
 volatile uint8_t digit_index= 0;
-volatile uint8_t prev_digit_index= 0;
+volatile uint8_t prev_digit_index= (DIGITS_NUMBER - 1);
 volatile static uint16_t calc_var;
+volatile static uint8_t negative= 0;
+volatile uint8_t segm_flag;
+
+#define SPACE   0x00
+#define MINUS   0x01
+#define DIGIT   0x02
+
 #endif
 
 #ifdef BCD_CONV
@@ -203,7 +210,7 @@ void displaySetup();
 
 //void displayPrintHex(uint8_t);
 
-void displayPrintESR(uint16_t);
+void displayPrintESR(int16_t);
 
 //void displayPrintBCD(uint8_t);
 
