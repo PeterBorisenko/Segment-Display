@@ -23,12 +23,12 @@ extern "C" {
 
 #define SHIFT_REG OUT
 
-#define wide_t uint8_t
+//#define wide_t uint8_t
 
 void shiftRegSetup();
-void shiftOutThru(const uint8_t *, uint8_t);
+//void shiftOutThru(const uint8_t *, uint8_t);
 void shiftOut(uint8_t);
-wide_t shiftIn();
+//wide_t shiftIn();
 
 #ifdef	__cplusplus
 }

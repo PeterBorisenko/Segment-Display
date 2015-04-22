@@ -4,22 +4,23 @@
 void shiftRegSetup() {
     //SHIFT_DIR|= (1 << SHIFT_DATA)|(1 << SHIFT_CLK)|(1 << SHIFT_LATCH);
 #if (SHIFT_CLK_AN != NONE)
-    SHIFT_ANSEL&= ~(1 << SHIFT_CLK_AN);
+    SHIFT_CLK_ANSEL&= ~(1 << SHIFT_CLK_AN);
 #endif
 #if (SHIFT_DATA_AN != NONE)
-    SHIFT_ANSEL&= ~(1 << SHIFT_DATA_AN);
+    SHIFT_DATA_ANSEL&= ~(1 << SHIFT_DATA_AN);
 #endif
 #if (SHIFT_LATCH_AN != NONE)
-    SHIFT_ANSEL&= ~(1 << SHIFT_LATCH_AN);
+    SHIFT_LETCH_ANSEL&= ~(1 << SHIFT_LATCH_AN);
 #endif
-    SHIFT_DIR&= ~((1 << SHIFT_CLK_PIN)|(1 << SHIFT_LATCH_PIN));
+    SHIFT_CLK_DIR&= ~(1 << SHIFT_CLK_PIN);
+    SHIFT_LATCH_DIR&= ~(1 << SHIFT_LATCH_PIN);
 #if (SHIFT_REG == IN) // TODO: replace for using more then 1 register with different directions
-    SHIFT_DIR|= (1 << SHIFT_DATA_PIN);
+    SHIFT_DATA_DIR|= (1 << SHIFT_DATA_PIN);
 #elif (SHIFT_REG == OUT)
-    SHIFT_DIR&= ~(1 << SHIFT_DATA_PIN);
+    SHIFT_DATA_DIR&= ~(1 << SHIFT_DATA_PIN);
 #endif
 }
-
+/*
 void shiftOutThru(const uint8_t * buffer, uint8_t count) {
     SHIFT_LATCH= 0;
 #if (BIT_ORDER == LSB)
@@ -42,7 +43,7 @@ void shiftOutThru(const uint8_t * buffer, uint8_t count) {
     }
     SHIFT_LATCH= 1;
 }
-
+*/
 void shiftOut(uint8_t data) {
     SHIFT_LATCH= 0;
 #if (BIT_ORDER == LSB)
@@ -65,7 +66,7 @@ void shiftOut(uint8_t data) {
     }
     SHIFT_LATCH= 1;
 }
-
+/*
 wide_t shiftIn() {
     wide_t result= 0;
     SHIFT_LATCH= 1;
@@ -86,3 +87,4 @@ wide_t shiftIn() {
     }
     return result;
 }
+*/
